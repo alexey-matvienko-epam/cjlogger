@@ -17,18 +17,22 @@ public:
     CJLogger();
     ~CJLogger();
 
-    const Aws::Kinesis::KinesisClient getClient(const Aws::Client::ClientConfiguration &config);
+    const Aws::Kinesis::KinesisClient getClient();
+
+    void setAwsConfig(const std::string &id, const std::string &key, const std::string &region);
+    void setStreamName(const std::string &stream_name);
+    void setIpcConfig(const std::string &broker_name, const std::string &topic);
 
     void startIPCListener();
     void acceptConnections();
-    void listenToIPC();
-    void process(std::unique_ptr<vizio::ipc::Connection> connection, const std::string& topic);
+
+    void process(std::unique_ptr<vizio::ipc::Connection> connection);
+    void wait();
     void stop();
 
 private:
-    void initAws();
     void initVariables();
-    void stopAllConnections();
+    void waitAllConnections();
     void sendToKinesis(const std::string& data);
     std::string getSysRegVariable(const std::string &key) const;
 
@@ -36,14 +40,18 @@ private:
     std::string var_fw_version_;
     std::string var_serial_number_;
     std::string var_model_;
-
-    Client::ClientConfiguration client_config_;
-    std::string kinesis_stream_name_;
-    std::thread listener_thread_;
+    
     std::thread accept_thread_;
     std::atomic<bool> stop_flag_;
-    vizio::ipc::Broker broker_;
-    const std::set<std::string> event_topics_ = {"perfomance"};
-    std::map<std::thread::id, std::thread> connection_threads_;
+    std::unique_ptr<vizio::ipc::Broker> broker_;
+    std::vector<std::thread> connection_threads_;
     std::mutex connections_mutex_;
+
+    std::string aws_id_;
+    std::string aws_key_;
+    std::string aws_region_;
+    std::string stream_name_;
+
+    std::string broker_name_;
+    std::string topic_;
 };

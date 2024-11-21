@@ -24,8 +24,9 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-gdwarf-4 -O0")
 
 add_executable(${CMAKE_PROJECT_NAME}
-  ${PROJECT_SOURCE_DIR}/analytics/cjlogger.cpp
-  ${PROJECT_SOURCE_DIR}/analytics/main.cpp
+  ${PROJECT_SOURCE_DIR}/cjlogger.h
+  ${PROJECT_SOURCE_DIR}/cjlogger.cpp
+  ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
  target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
@@ -38,9 +39,7 @@ add_executable(${CMAKE_PROJECT_NAME}
   ${SSL_LIBRARY}
   ${CRYPTO_LIBRARY}
   # ${INOTIFY_LIBRARY}
-  ${AWS_SDK_S3_LIBRARY}
   ${AWS_SDK_CORE_LIBRARY}
-  ${AWS_SDK_FIREHOSE_LIBRARY}
   ${AWS_SDK_KINESIS_LIBRARY}
   # ${RT_LIBRARY}
  )
@@ -61,7 +60,49 @@ target_compile_definitions(${CMAKE_PROJECT_NAME}
     USE_STDOUT_FOR_LOGGING
 )
 
-# install(TARGETS ${ANALYTICS_PROJECT_NAME}
-#     EXPORT ${ANALYTICS_PROJECT_NAME}
-#   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-# )
+install(TARGETS ${CMAKE_PROJECT_NAME}
+    EXPORT ${CMAKE_PROJECT_NAME}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+#------------------ipc
+
+add_executable(ipc_tester
+  ${PROJECT_SOURCE_DIR}/ipc_tester.cpp
+)
+
+target_link_libraries(ipc_tester PUBLIC
+${IPC_LIBRARY}
+${FMT_LIBRARY}
+${PTHREAD_LIBRARY}
+${Z_LIBRARY}
+)
+
+target_include_directories(ipc_tester
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/vizio
+)
+
+target_compile_definitions(ipc_tester
+  PRIVATE
+    USE_STDOUT_FOR_LOGGING
+)
+
+#--------------kinesis
+add_executable(kinesis_tester
+  ${PROJECT_SOURCE_DIR}/kinesis_tester.cpp
+)
+
+target_link_libraries(kinesis_tester PUBLIC
+${FMT_LIBRARY}
+${PTHREAD_LIBRARY}
+${Z_LIBRARY}
+# ${VIZIOS_SENTRY_LOG}
+${CURL_LIBRARY}
+${SSL_LIBRARY}
+${CRYPTO_LIBRARY}
+# ${INOTIFY_LIBRARY}
+${AWS_SDK_CORE_LIBRARY}
+${AWS_SDK_KINESIS_LIBRARY}
+# ${RT_LIBRARY}
+)
